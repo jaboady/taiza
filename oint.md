@@ -1,61 +1,21 @@
-### 0–5 min — Commencer par sa vision
+Après nettoyage des répertoires state, work et logs, nous avons effectué deux redémarrages complets de Liferay.
 
-« Je voulais profiter du point pour prendre un peu de hauteur sur le projet. Avec tous les sujets qu’on a en parallèle en ce moment, j’aimerais bien avoir ta lecture sur les priorités des prochaines semaines. »
+Le problème reste reproductible à chaque démarrage.
 
-Puis le laisser parler.
+La requête sur BatchEngineImportTask montre :
 
-L’objectif est d’abord de comprendre ce qu’il considère lui-même comme prioritaire.
+* task 1 — 30/09 11:07 — ObjectDefinition — COMPLETED
+* task 2001 — 30/09 13:08 — FAILED
+* task 4001 — 01/10 12:36 — FAILED
+* task 6001 — 01/10 13:28 — FAILED
 
-### 5–15 min — Amener Liferay sans remettre en cause la décision
+Les trois échecs présentent exactement le même message :
+Cannot invoke "Object.hashCode()" because "key" is null
 
-« Justement, il y a un point sur lequel je m’interroge : la migration Liferay vers la dernière version de l’éditeur sur nos deux applications.
+Le traitement échoue avant l’import des ObjectDefinitions (processedItemsCount = 0, totalItemsCount = 4).
 
-Je comprends pourquoi on doit la faire. Ma question porte plutôt sur le timing et la capacité qu’on décide d’y mettre maintenant.
+Nous avons également vérifié que le contenu du batch ayant réussi (task 1) et celui du batch en échec (task 2001) est identique.
 
-Parce qu’en parallèle, on a encore Card, IAM, CAS-OIDC et Parcours-Tiers qui ne sont pas sur DMZR As Code.
+Après démarrage, com.liferay.batch.engine.service version 4.0.134 est ACTIVE et ConfigurationProviderImpl est bien enregistré comme service OSGi.
 
-Du coup, je me demande quel est l’arbitrage derrière : qu’est-ce qu’on considère aujourd’hui comme réellement prioritaire entre ces sujets ? »
-
-Puis attendre sa réponse.
-
-S’il confirme que Liferay est prioritaire :
-
-« OK, ça me va. Ce que je voulais surtout vérifier, c’est qu’on assume bien cet ordre de priorité, notamment par rapport aux sujets DMZR As Code. »
-
-Cela permet de faire acter l’arbitrage sans rentrer dans une confrontation.
-
-### 15–25 min — Faire apparaître le sujet de capacité
-
-« Il y a un deuxième élément qui me fait me poser la question : j’ai l’impression qu’on commence à avoir pas mal de sujets en parallèle.
-
-On a notamment plusieurs développeurs mobilisés autour d’AP85125 et d’autres sujets.
-
-Individuellement, je ne remets pas en cause ces sujets. Je me demande plutôt si, collectivement, notre capacité n’est pas un peu dispersée. »
-
-Puis introduire le sujet plus délicat :
-
-« Et je me rends compte aussi que je n’ai pas forcément une bonne visibilité sur l’allocation de toute l’équipe.
-
-Sur certains tickets, par exemple, je vois assez peu d’évolution d’un point à l’autre. Il y a peut-être des dépendances, du travail transverse ou des choses que je ne vois tout simplement pas.
-
-Mais ça m’amène à me demander : est-ce qu’on a aujourd’hui une vision claire de qui est mobilisé sur quoi et avec quelle priorité ? »
-
-⚠️ Ne donne pas spontanément de noms.
-
-Si ton manager te demande : « Tu penses à qui ? », reste factuel :
-
-« Je peux te montrer les tickets qui m’ont amené à me poser la question. Mais mon sujet n’est pas vraiment de pointer telle ou telle personne. Ce qui m’interpelle, c’est plutôt notre allocation globale et la visibilité qu’on en a. »
-
-### 25–30 min — Transformer le constat en proposition
-
-« Peut-être qu’un exercice assez simple serait de refaire rapidement un mapping : développeurs / sujets / priorité / éventuels blocages.
-
-Pas forcément quelque chose de lourd. Juste avoir une photographie de là où part réellement notre capacité.
-
-Ça permettrait de voir si notre allocation correspond bien aux priorités qu’on vient d’évoquer. »
-
-Et terminer par :
-
-« De mon côté, mon interrogation principale est vraiment celle-là : avec la capacité qu’on a aujourd’hui, est-ce qu’on veut prioritairement accélérer Liferay, sécuriser DMZR As Code, ou maintenir les différents sujets en parallèle ?
-
-Je préfère qu’on ait un arbitrage clair plutôt que de diluer notre capacité sur plusieurs fronts. »
+La stack trace passe notamment par BatchEngineImportTaskExecutorImpl._getCSVFileColumnDelimiter(), ConfigurationProviderImpl.getCompanyConfiguration(), SettingsLocatorHelperImpl.getConfigurationPidMapping() puis ServiceTrackerMapImpl, avant le NPE.
